@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cart & Slot Booking - Q-Skip</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', sans-serif; }
+    body { background: #e9ede9; padding: 20px; }
+    .box { max-width: 600px; background: white; margin: 20px auto; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    h2 { margin-bottom: 15px; border-bottom: 2px solid #f4f5f7; padding-bottom: 10px; color: #282c3f; }
+    .cart-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #e9ede9; }
+    .bill-row { display: flex; justify-content: space-between; margin-top: 10px; font-weight: 500; }
+    .total-bill { font-size: 1.2rem; font-weight: bold; color: #282c3f; border-top: 2px solid #282c3f; margin-top: 15px; padding-top: 10px; }
+    .slot-section { margin-top: 25px; }
+    select { width: 100%; padding: 12px; margin-top: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 1rem; }
+    .btn-pay { width: 100%; background: #FC8019; color: white; border: none; padding: 15px; margin-top: 25px; font-size: 1.1rem; font-weight: bold; border-radius: 4px; cursor: pointer; }
+    .btn-pay:hover { background: #e06d0e; }
+  </style>
+</head>
+<body>
+
+  <div class="box">
+    <h2>Q-Skip Order Summary</h2>
+    <div id="items-list"></div>
+    
+    <div class="bill-row"><span>Item Subtotal</span><span id="subtotal">₹0</span></div>
+    <div class="bill-row"><span>Platform & Service Fee</span><span>₹5</span></div>
+    <div class="bill-row total-bill"><span>Total Amount</span><span id="final-total">₹0</span></div>
+
+  <div class="slot-section">
+  <h3>Select Pickup Time Slot</h3>
+  <select id="time-slot">
+
+    <!-- Continuous 30-Min Slots Throughout the Day -->
+    <optgroup label="Morning Slots">
+      <option value="08:00 AM - 08:30 AM">08:00 AM - 08:30 AM</option>
+      <option value="08:30 AM - 09:00 AM">08:30 AM - 09:00 AM</option>
+      <option value="09:00 AM - 09:30 AM">09:00 AM - 09:30 AM</option>
+      <option value="09:30 AM - 10:00 AM">09:30 AM - 10:00 AM</option>
+      <option value="10:00 AM - 10:30 AM">10:00 AM - 10:30 AM</option>
+      <option value="10:30 AM - 11:00 AM">10:30 AM - 11:00 AM</option>
+      <option value="11:00 AM - 11:30 AM">11:00 AM - 11:30 AM</option>
+      <option value="11:30 AM - 12:00 PM">11:30 AM - 12:00 PM</option>
+    </optgroup>
+
+    <optgroup label="Lunch & Afternoon Slots">
+      <option value="12:00 PM - 12:30 PM">12:00 PM - 12:30 PM</option>
+      <option value="12:30 PM - 01:00 PM">12:30 PM - 01:00 PM</option>
+      <option value="01:00 PM - 01:30 PM">01:00 PM - 01:30 PM</option>
+      <option value="01:25 PM - 02:00 PM ">01:25 PM - 02:00 PM </option>
+      <option value="02:00 PM - 02:30 PM">02:00 PM - 02:30 PM</option>
+      <option value="02:30 PM - 03:00 PM">02:30 PM - 03:00 PM</option>
+      <option value="03:00 PM - 03:30 PM">03:00 PM - 03:30 PM</option>
+      <option value="03:30 PM - 04:00 PM">03:30 PM - 04:00 PM</option>
+    </optgroup>
+
+    <optgroup label="Evening & Post-Class Slots">
+      <option value="04:00 PM - 04:30 PM">04:00 PM - 04:30 PM</option>
+      <option value="04:40 PM - 05:00 PM ">04:40 PM - 05:00 PM </option>
+      <option value="05:00 PM - 05:30 PM">05:00 PM - 05:30 PM</option>
+      <option value="05:30 PM - 06:00 PM">05:30 PM - 06:00 PM</option>
+      <option value="06:00 PM - 06:30 PM">06:00 PM - 06:30 PM </option>
+    </optgroup>
+  </select>
+</div>
+
+    <button class="btn-pay" onclick="proceedToPayment()">Proceed to Payment</button>
+  </div>
+
+  <script>
+    const cart = JSON.parse(localStorage.getItem('qskip_cart')) || {};
+    const itemsList = document.getElementById('items-list');
+
+    let itemTotal = 0;
+    const keys = Object.keys(cart);
+
+    if (keys.length === 0) {
+      itemsList.innerHTML = "<p>Your cart is empty!</p>";
+    } else {
+      itemsList.innerHTML = keys.map(k => {
+        const item = cart[k];
+        const itemCost = item.qty * item.price;
+        itemTotal += itemCost;
+        return `
+          <div class="cart-item">
+            <span>${item.name} x ${item.qty}</span>
+            <span>₹${itemCost}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    const grandTotal = itemTotal > 0 ? itemTotal + 5 : 0;
+    document.getElementById('subtotal').innerText = `₹${itemTotal}`;
+    document.getElementById('final-total').innerText = `₹${grandTotal}`;
+
+    function proceedToPayment() {
+      if(keys.length === 0) return alert("Add items to cart first!");
+      const selectedSlot = document.getElementById('time-slot').value;
+      
+      const orderData = {
+        cart: cart,
+        totalBill: grandTotal,
+        slot: selectedSlot
+      };
+      
+      localStorage.setItem('qskip_active_order', JSON.stringify(orderData));
+      window.location.href = "payment.html";
+    }
+  </script>
+</body>
+</html>

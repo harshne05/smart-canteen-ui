@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Menu - Swiggy Express</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', sans-serif; }
+    body { background: #f4f5f7; padding-bottom: 80px; }
+    header { background: #fff; padding: 15px 10%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); position: sticky; top: 0; z-index: 10; }
+    .logo { color: #FC8019; font-weight: bold; font-size: 1.5rem; }
+    .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
+    .card { background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    .card.sold-out { opacity: 0.6; }
+    .item-info h3 { margin-bottom: 5px; font-size: 1.2rem; }
+    .price { color: #3e4152; font-weight: 600; font-size: 1.1rem; margin-top: 5px; }
+    .badge-sold { color: #e74c3c; font-weight: bold; font-size: 0.85rem; margin-top: 5px; text-transform: uppercase; }
+    .btn-add { background: #fff; color: #60b246; border: 1px solid #d4d5d9; padding: 10px 25px; font-weight: bold; border-radius: 4px; cursor: pointer; }
+    .btn-add:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+    .qty-ctrl { display: flex; align-items: center; background: #60b246; color: white; border-radius: 4px; overflow: hidden; }
+    .qty-ctrl button { background: transparent; border: none; color: white; width: 30px; height: 35px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
+    .qty-ctrl span { padding: 0 10px; font-weight: bold; }
+    .footer-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #60b246; color: white; padding: 15px 10%; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+    .footer-bar a { color: white; text-decoration: none; border: 1px solid white; padding: 8px 15px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">Swiggy</div>
+    <div>Restaurant Menu</div>
+  </header>
+
+  <div class="container" id="menu-container"></div>
+
+  <div class="footer-bar" id="cart-bar" style="display:none;">
+    <span id="cart-summary">0 Items | ₹0</span>
+    <a href="cart.html">View Cart →</a>
+  </div>
+
+  <script>
+    const items = [
+      { id: 1, name: "Paneer Butter Masala", price: 260, soldOut: false },
+      { id: 2, name: "Chicken Biryani", price: 320, soldOut: false },
+      { id: 3, name: "Garlic Naan (2 pcs)", price: 80, soldOut: false },
+      { id: 4, name: "Gulab Jamun (2 pcs)", price: 90, soldOut: true }
+    ];
+
+    let cart = JSON.parse(localStorage.getItem('swiggy_cart')) || {};
+
+    function renderMenu() {
+      const container = document.getElementById('menu-container');
+      container.innerHTML = items.map(item => {
+        const qty = cart[item.id] ? cart[item.id].qty : 0;
+        return `
+          <div class="card ${item.soldOut ? 'sold-out' : ''}">
+            <div class="item-info">
+              <h3>${item.name}</h3>
+              <div class="price">₹${item.price}</div>
+              ${item.soldOut ? '<div class="badge-sold">Sold Out</div>' : ''}
+            </div>
+            <div>
+              ${item.soldOut ? '<button disabled style="padding: 10px 20px; opacity:0.5;">Unavailable</button>' : 
+                qty === 0 ? `<button class="btn-add" onclick="updateQty(${item.id}, 1)">ADD</button>` :
+                `<div class="qty-ctrl">
+                  <button onclick="updateQty(${item.id}, -1)">-</button>
+                  <span>${qty}</span>
+                  <button onclick="updateQty(${item.id}, 1)">+</button>
+                </div>`
+              }
+            </div>
+          </div>
+        `;
+      }).join('');
+      updateCartBar();
+    }
+
+    function updateQty(id, change) {
+      const item = items.find(i => i.id === id);
+      if(!cart[id]) cart[id] = { ...item, qty: 0 };
+      cart[id].qty += change;
+      if(cart[id].qty <= 0) delete cart[id];
+      localStorage.setItem('swiggy_cart', JSON.stringify(cart));
+      renderMenu();
+    }
+
+    function updateCartBar() {
+      const keys = Object.keys(cart);
+      let totalQty = 0, totalPrice = 0;
+      keys.forEach(k => {
+        totalQty += cart[k].qty;
+        totalPrice += cart[k].qty * cart[k].price;
+      });
+      const bar = document.getElementById('cart-bar');
+      if(totalQty > 0) {
+        bar.style.display = 'flex';
+        document.getElementById('cart-summary').innerText = `${totalQty} Items | ₹${totalPrice}`;
+      } else {
+        bar.style.display = 'none';
+      }
+    }
+
+    renderMenu();
+  </script>
+</body>
+</html>

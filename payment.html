@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Payment - Q-Skip</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', sans-serif; }
+    body { background: #f4f5f7; padding: 20px; }
+    .box { max-width: 500px; background: white; margin: 30px auto; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    h2 { margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+    .pay-option { border: 1px solid #ddd; padding: 15px; border-radius: 6px; margin-bottom: 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 500; }
+    .pay-option:hover { border-color: #FC8019; background: #fffbf7; }
+    .btn-confirm { width: 100%; background: #60b246; color: white; border: none; padding: 15px; margin-top: 15px; font-size: 1.1rem; font-weight: bold; border-radius: 4px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <div class="box">
+    <h2>Payment Method</h2>
+    <div id="pay-amount" style="margin-bottom: 15px; font-weight: bold; color: #FC8019;"></div>
+
+    <div class="pay-option">
+      <input type="radio" name="payment" id="upi" checked>
+      <label for="upi">Campus UPI (GPay / PhonePe / Paytm)</label>
+    </div>
+    <div class="pay-option">
+      <input type="radio" name="payment" id="card">
+      <label for="card">Student ID / Meal Pass Card</label>
+    </div>
+    <div class="pay-option">
+      <input type="radio" name="payment" id="cod">
+      <label for="cod">Pay Cash at Counter</label>
+    </div>
+
+    <button class="btn-confirm" onclick="payNow()">Confirm & Place Order</button>
+  </div>
+
+  <script>
+    const orderData = JSON.parse(localStorage.getItem('qskip_active_order')) || { totalBill: 0 };
+    document.getElementById('pay-amount').innerText = `Amount to Pay: ₹${orderData.totalBill}`;
+
+    function payNow() {
+      localStorage.removeItem('qskip_cart');
+      window.location.href = "tracking.html";
+    }
+  </script>
+</body>
+</html>

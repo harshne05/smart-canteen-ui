@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Q-Skip - Smart Pre-Order Canteen</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Poppins:wght@400;600&display=swap');
+
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
+    }
+
+    body { 
+      background: linear-gradient(135deg, #ff4e6a 0%, #e62e5c 100%); 
+      color: #ffffff; 
+      height: 100vh; 
+      display: flex; 
+      flex-direction: column; 
+      justify-content: center; 
+      align-items: center; 
+      text-align: center; 
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    /* Subtle Pattern Background Overlay */
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1.5px, transparent 1.5px);
+      background-size: 24px 24px;
+      pointer-events: none;
+    }
+
+    .content-wrapper {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Logo Container with Glassmorphism */
+    .logo-container {
+      width: 120px;
+      height: 120px;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      border-radius: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 22px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+      animation: pop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .logo-container svg {
+      width: 75px;
+      height: 75px;
+    }
+
+    @keyframes pop { 
+      0% { transform: scale(0); } 
+      100% { transform: scale(1); } 
+    }
+
+    /* Typography */
+    h1 { 
+      font-family: 'Fredoka', cursive;
+      font-size: 3.8rem; 
+      letter-spacing: 2px;
+      margin-bottom: 0px;
+      line-height: 1;
+      text-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .divider {
+      width: 120px;
+      height: 3px;
+      background: #ffffff;
+      border-radius: 2px;
+      margin: 14px 0 16px 0;
+      opacity: 0.9;
+    }
+
+    .sub-title { 
+      font-family: 'Fredoka', cursive;
+      font-size: 1.6rem; 
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .tagline { 
+      font-size: 0.95rem; 
+      opacity: 0.9;
+      margin-bottom: 35px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    /* Action Button */
+    .btn { 
+      background: #ffffff; 
+      color: #e62e5c; 
+      text-decoration: none; 
+      padding: 15px 42px; 
+      font-weight: 700; 
+      border-radius: 30px; 
+      font-size: 1.1rem; 
+      transition: all 0.25s ease; 
+      display: inline-block; 
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
+    }
+
+    .btn:hover { 
+      transform: translateY(-3px); 
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+      background: #fff0f3;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="content-wrapper">
+    
+    <!-- Innovative "Fast-Forward Q" Vector Logo -->
+    <div class="logo-container">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Outer Q Body -->
+        <circle cx="46" cy="46" r="28" stroke="white" stroke-width="7"/>
+        
+        <!-- Fast-Forward Arrow (Queue Skip Icon Inside Q) -->
+        <path d="M 36 36 L 47 46 L 36 56" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M 47 36 L 58 46 L 47 56" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+
+        <!-- Q Express Tail -->
+        <path d="M 62 62 L 78 78" stroke="white" stroke-width="8" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <h1>Q-SKIP</h1>
+    <div class="divider"></div>
+    <div class="sub-title">Smart Pre-Order Canteen</div>
+    <p class="tagline">Pre-order. Pickup. Prosper.</p>
+    
+    <a href="menu.html" class="btn">Explore Menu</a>
+
+  </div>
+
+</body>
+</html>
