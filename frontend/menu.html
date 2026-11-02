@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Menu - Q-Skip</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+
+<body class="p-menu">
+
+  <header>
+    <div class="logo">Q-SKIP</div>
+    <div class="header-title">Canteen Menu</div>
+  </header>
+
+  <div class="categories">
+    <button class="cat-btn active"
+      onclick="filterCategory('All', this)">All</button>
+
+    <button class="cat-btn"
+      onclick="filterCategory('Snacks', this)">Snacks</button>
+
+    <button class="cat-btn"
+      onclick="filterCategory('Food Items', this)">Food Items</button>
+
+    <button class="cat-btn"
+      onclick="filterCategory('Juices & Beverages', this)">
+      Beverages
+    </button>
+
+    <button class="cat-btn"
+      onclick="filterCategory('Desserts', this)">Desserts</button>
+  </div>
+
+  <div class="container" id="menu-container">
+    <p class="message">Loading menu from database...</p>
+  </div>
+
+  <div class="footer-bar" id="cart-bar">
+    <span id="cart-summary">0 Items | ₹0</span>
+    <a href="/cart.html">View Cart →</a>
+  </div>
+
+  <script>
+    const API_URL = '/api/menu';
+
+    let allMenuItems = [];
+    let selectedCategory = 'All';
+    let cart = {};
+
+    function loadCart() {
+      try {
+        const savedCart = localStorage.getItem('qskip_cart');
+        cart = savedCart ? JSON.parse(savedCart) : {};
+
+        if (!cart || Array.isArray(cart) || typeof cart !== 'object') {
+          cart = {};
+        }
+      } catch (error) {
+        console.error('Unable to read cart:', error);
+        cart = {};
+      }
+    }
+
+    // Auto-remove unavailable items from cart
+    function validateCartAgainstStock() {
+      let cartChanged = false;
+
+      Object.keys(cart).forEach(id => {
+        const menuItem = allMenuItems.find(i => i.itemId === id);
+        if (!menuItem || menuItem.availabilityStatus !== 'In Stock') {
+          delete cart[id];
+          cartChanged = true;
+        }
+      });
+
+      if (cartChanged) {
+        try {
+          localStorage.setItem('qskip_cart', JSON.stringify(cart));
+        } catch (error) {
+          console.error('Unable to update cart after stock validation:', error);
+        }
+      }
+    }
+
+    async function fetchMenu(isBackgroundRefresh = false) {
+      const container = document.getElementById('menu-container');
+
+      if (!isBackgroundRefresh && allMenuItems.length === 0) {
+        container.innerHTML =
+          '<p class="message">Loading menu from database...</p>';
+      }
+
+      try {
+        const response = await fetch(API_URL);
+
+        if (!response.ok) {
+          throw new Error(
+            `Backend returned HTTP ${response.status}`
+          );
+        }
+
+        const data = await response.json();
+
+        if (!data.success || !Array.isArray(data.menu)) {
+          throw new Error(
+            data.message || 'Invalid response received from backend'
+          );
+        }
+
+        allMenuItems = data.menu;
+
+        loadCart();
+        validateCartAgainstStock();
+
+        if (allMenuItems.length === 0) {
+          container.innerHTML = `
+            <div class="message">
+              <p>No menu items were found in the database.</p>
+              <p style="font-size:14px;margin-top:10px;">
+                Check whether menu.json was loaded by the backend.
+              </p>
+              <button class="retry-btn" onclick="fetchMenu()">
+                Reload Menu
+              </button>
+            </div>
+          `;
+          updateCartBar();
+          return;
+        }
+
+        renderMenu();
+
+      } catch (error) {
+        console.error('Menu loading error:', error);
+
+        if (!isBackgroundRefresh && allMenuItems.length === 0) {
+          container.innerHTML = `
+            <div class="message error-message">
+              <p><strong>Unable to load the canteen menu.</strong></p>
+              <p style="font-size:14px;margin-top:10px;">
+                ${escapeHTML(error.message)}
+              </p>
+              <p style="font-size:14px;margin-top:10px;">
+                Check that your backend is running on port 5000
+                and that Vite is running on port 5173.
+              </p>
+              <button class="retry-btn" onclick="fetchMenu()">
+                Try Again
+              </button>
+            </div>
+          `;
+        }
+      }
+    }
+
+    function escapeHTML(value) {
+      return String(value).replace(/[&<>"']/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      })[char]);
+    }
+
+    function filterCategory(category, button) {
+      selectedCategory = category;
+
+      document.querySelectorAll('.cat-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+
+      button.classList.add('active');
+
+      renderMenu();
+    }
+
+    function renderMenu() {
+      const container = document.getElementById('menu-container');
+
+      const filteredItems = selectedCategory === 'All'
+        ? allMenuItems
+        : allMenuItems.filter(item =>
+            item.category.toLowerCase() ===
+            selectedCategory.toLowerCase()
+          );
+
+      if (filteredItems.length === 0) {
+        container.innerHTML = `
+          <p class="message">
+            No items found under "${escapeHTML(selectedCategory)}".
+          </p>
+        `;
+
+        updateCartBar();
+        return;
+      }
+
+      container.innerHTML = filteredItems.map(item => {
+        const id = item.itemId;
+        const qty = cart[id] ? Number(cart[id].qty) || 0 : 0;
+        const available = item.availabilityStatus === 'In Stock';
+
+        return `
+          <div class="card">
+            <div class="item-info">
+              <h3>${escapeHTML(item.itemName)}</h3>
+
+              <div class="stall">
+                📍 ${escapeHTML(item.stallName)} - ${escapeHTML(item.category)}
+              </div>
+
+              <div class="price">₹${Number(item.price)}</div>
+
+              <div class="availability ${available ? '' : 'unavailable'}">
+                ${available ? '● In Stock' : '● Currently Unavailable'}
+              </div>
+            </div>
+
+            <div>
+              ${
+                !available
+                  ? '<button class="btn-add" disabled>Unavailable</button>'
+                  : qty === 0
+                    ? `<button class="btn-add"
+                        onclick="updateQty('${escapeHTML(id)}', 1)">
+                        ADD
+                      </button>`
+                    : `
+                      <div class="qty-ctrl">
+                        <button onclick="updateQty('${escapeHTML(id)}', -1)">−</button>
+                        <span>${qty}</span>
+                        <button onclick="updateQty('${escapeHTML(id)}', 1)">+</button>
+                      </div>
+                    `
+              }
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      updateCartBar();
+    }
+
+    function updateQty(id, change) {
+      const item = allMenuItems.find(menuItem => menuItem.itemId === id);
+
+      if (!item || item.availabilityStatus !== 'In Stock') {
+        return;
+      }
+
+      if (!cart[id]) {
+        cart[id] = {
+          id: item.itemId,
+          name: item.itemName,
+          price: Number(item.price),
+          qty: 0
+        };
+      }
+
+      cart[id].qty += change;
+
+      if (cart[id].qty <= 0) {
+        delete cart[id];
+      }
+
+      try {
+        localStorage.setItem('qskip_cart', JSON.stringify(cart));
+      } catch (error) {
+        console.error('Unable to save cart:', error);
+        alert('Could not save your cart. Check browser storage.');
+        loadCart();
+      }
+
+      renderMenu();
+    }
+
+    function updateCartBar() {
+      const keys = Object.keys(cart);
+
+      let totalQty = 0;
+      let totalPrice = 0;
+
+      keys.forEach(key => {
+        const qty = Number(cart[key].qty) || 0;
+        const price = Number(cart[key].price) || 0;
+
+        if (qty > 0) {
+          totalQty += qty;
+          totalPrice += qty * price;
+        }
+      });
+
+      const bar = document.getElementById('cart-bar');
+
+      if (totalQty > 0) {
+        bar.style.display = 'flex';
+
+        document.getElementById('cart-summary').textContent =
+          `${totalQty} Item${totalQty === 1 ? '' : 's'} | ₹${totalPrice}`;
+      } else {
+        bar.style.display = 'none';
+      }
+    }
+
+    // Initial load and live 5-second polling loop
+    fetchMenu();
+    setInterval(() => fetchMenu(true), 5000);
+    window.addEventListener('focus', () => fetchMenu(true));
+  </script>
+
+</body>
+</html>

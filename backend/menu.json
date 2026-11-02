@@ -1,0 +1,173 @@
+[
+  {
+    "itemId": "SNK01",
+    "itemName": "Crispy Veg Samosa (2 pcs)",
+    "stallName": "Main Canteen",
+    "category": "Snacks",
+    "price": 20,
+    "prepTimeMinutes": 3,
+    "availabilityStatus": "In Stock"
+  },
+  {
+    "itemId": "SNK02",
+    "itemName": "Cheese Corn Garlic Bread",
+    "stallName": "Snack Stop",
+    "category": "Snacks",
+    "price": 60,
+    "prepTimeMinutes": 6,
+    "availabilityStatus": "In Stock"
+  },
+  {
+    "itemId": "SNK03",
+    "itemName": "Paneer Roll",
+    "stallName": "Frankie Counter",
+    "category": "Snacks",
+    "price": 70,
+    "prepTimeMinutes": 7,
+    "availabilityStatus": "In Stock"
+  },
+  {
+    "itemId": "SNK04",
+    "itemName": "French Fries (Salted)",
+    "stallName": "Snack Stop",
+    "category": "Snacks",
+    "price": 50,
+    "prepTimeMinutes": 5,
+    "availabilityStatus": "In Stock"
+  },
+  {
+    "itemId": "SNK05",
+    "itemName": "Veg Cheese Grilled Sandwich",
+    "stallName": "Main Canteen",
+    "category": "Snacks",
+    "price": 65,
+    "prepTimeMinutes": 8,
+    "availabilityStatus": "In Stock"
+  },
+  {
+    "itemId": "MNC01",
+    "itemName": "Special Veg Thali / Meal",
+    "stallName": "Main Canteen",
+    "category": "Food Items",
+    "price": 90,
+    "prepTimeMinutes": 10,
+    "availabilityStatus": "In Stock"
+  },
+  {
+    "itemId": "MNC02",
+    "itemName": "Paneer Butter Masala + 2 Butter Naan",
+    "stallName": "North Indian Corner",
+    "category": "Food Items",
+    "price": 130,
+    "prepTimeMinutes": 12,
+    "availabilityStatus": "In Stock"
+  },
+  {
+    "itemId": "MNC03",
+    "itemName": "Masala Dosa with Chutney & Sambar",
+    "stallName": "South Express",
+    "category": "Food Items",
+    "price": 55,
+    "prepTimeMinutes": 7,
+    "availabilityStatus": "In Stock"
+  },
+  {
+    "itemId": "MNC04",
+    "itemName": "Chicken Biryani",
+    "stallName": "Biryani Counter",
+    "category": "Food Items",
+    "price": 140,
+    "prepTimeMinutes": 10,
+    "availabilityStatus": "In Stock"
+  },
+  {
+    "itemId": "MNC05",
+    "itemName": "Veg Schezwan Fried Rice",
+    "stallName": "Chinese Express",
+    "category": "Food Items",
+    "price": 85,
+    "prepTimeMinutes": 9,
+    "availabilityStatus": "In Stock"
+  },
+  {
+    "itemId": "BEV01",
+    "itemName": "Cold Coffee with Ice Cream",
+    "stallName": "Juice Bar",
+    "category": "Juices & Beverages",
+    "price": 50,
+    "prepTimeMinutes": 4,
+    "availabilityStatus": "In Stock"
+  },
+  {
+    "itemId": "BEV02",
+    "itemName": "Fresh Watermelon Juice",
+    "stallName": "Juice Bar",
+    "category": "Juices & Beverages",
+    "price": 40,
+    "prepTimeMinutes": 3,
+    "availabilityStatus": "In Stock"
+  },
+  {
+    "itemId": "BEV03",
+    "itemName": "Oreo Thick Milkshake",
+    "stallName": "Juice Bar",
+    "category": "Juices & Beverages",
+    "price": 70,
+    "prepTimeMinutes": 5,
+    "availabilityStatus": "In Stock"
+  },
+  {
+    "itemId": "BEV04",
+    "itemName": "Hot Masala Chai",
+    "stallName": "Tea & Coffee Counter",
+    "category": "Juices & Beverages",
+    "price": 15,
+    "prepTimeMinutes": 2,
+    "availabilityStatus": "In Stock"
+  },
+  {
+    "itemId": "BEV05",
+    "itemName": "Lemon Ice Tea",
+    "stallName": "Juice Bar",
+    "category": "Juices & Beverages",
+    "price": 35,
+    "prepTimeMinutes": 2,
+    "availabilityStatus": "In Stock"
+  },
+  {
+    "itemId": "DES01",
+    "itemName": "Choco Lava Cake",
+    "stallName": "Campus Bakery",
+    "category": "Desserts",
+    "price": 60,
+    "prepTimeMinutes": 4,
+    "availabilityStatus": "In Stock"
+  },
+  {
+    "itemId": "DES02",
+    "itemName": "Chocolate Brownie with Fudge",
+    "stallName": "Campus Bakery",
+    "category": "Desserts",
+    "price": 75,
+    "prepTimeMinutes": 3,
+    "availabilityStatus": "In Stock"
+  },
+  {
+    "itemId": "DES03",
+    "itemName": "Gulab Jamun (2 pcs)",
+    "stallName": "Main Canteen",
+    "category": "Desserts",
+    "price": 30,
+    "prepTimeMinutes": 2,
+    "availabilityStatus": "In Stock"
+  },
+  {
+    "itemId": "DES04",
+    "itemName": "Vanilla Scoop Ice Cream",
+    "stallName": "Juice Bar",
+    "category": "Desserts",
+    "price": 35,
+    "prepTimeMinutes": 2,
+    "availabilityStatus": "In Stock"
+  }
+]

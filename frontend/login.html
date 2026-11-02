@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Q-Skip</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+
+<body class="p-login">
+
+  <div class="login-card">
+    <div class="brand-title">Q-SKIP</div>
+    <p class="subtitle">Smart Pre-Order Canteen Portal</p>
+
+    <!-- Role Selection Tabs -->
+    <div class="role-toggle">
+      <button type="button" class="role-btn active" id="btn-student" onclick="setRole('student')">
+        🎓 Student
+      </button>
+      <button type="button" class="role-btn" id="btn-faculty" onclick="setRole('faculty')">
+        👨‍🏫 Faculty / Staff
+      </button>
+    </div>
+
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label id="id-label" for="userId">Student Registration No.</label>
+        <input 
+          type="text" 
+          id="userId" 
+          placeholder="e.g. 24BAI1619" 
+          required 
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="userName">Full Name</label>
+        <input 
+          type="text" 
+          id="userName" 
+          placeholder="e.g. Harshne" 
+          required 
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password / PIN</label>
+        <input 
+          type="password" 
+          id="password" 
+          placeholder="••••••••" 
+          required 
+        />
+      </div>
+
+      <button type="submit" class="btn-login" id="login-submit">
+        Login as Student
+      </button>
+    </form>
+
+    <div class="footer-note">
+      Campus Canteen Management System
+    </div>
+  </div>
+
+  <script>
+    let currentRole = 'student';
+
+    function setRole(role) {
+      currentRole = role;
+      const studentBtn = document.getElementById('btn-student');
+      const facultyBtn = document.getElementById('btn-faculty');
+      const idLabel = document.getElementById('id-label');
+      const userIdInput = document.getElementById('userId');
+      const submitBtn = document.getElementById('login-submit');
+
+      if (role === 'student') {
+        studentBtn.classList.add('active');
+        facultyBtn.classList.remove('active');
+        idLabel.textContent = 'Student Registration No.';
+        userIdInput.placeholder = 'e.g. 24BAI1619';
+        submitBtn.textContent = 'Login as Student';
+      } else {
+        facultyBtn.classList.add('active');
+        studentBtn.classList.remove('active');
+        idLabel.textContent = 'Faculty Employee ID';
+        userIdInput.placeholder = 'e.g. FAC9021';
+        submitBtn.textContent = 'Login as Faculty';
+      }
+    }
+
+    function handleLogin(event) {
+      event.preventDefault();
+
+      const userId = document.getElementById('userId').value.trim();
+      const userName = document.getElementById('userName').value.trim();
+
+      if (!userId || !userName) {
+        alert('Please fill in all fields.');
+        return;
+      }
+
+      // Save user profile details to localStorage for ordering & payment
+      const userProfile = {
+        role: currentRole,
+        regNo: userId,
+        name: userName,
+        isLoggedIn: true
+      };
+
+      localStorage.setItem('qskip_user', JSON.stringify(userProfile));
+
+      alert(`Welcome ${userName}! Logged in successfully as ${currentRole.toUpperCase()}.`);
+
+      // Route directly to Menu Page
+      window.location.href = '/menu.html';
+    }
+  </script>
+
+</body>
+</html>

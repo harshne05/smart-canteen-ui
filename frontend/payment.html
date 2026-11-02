@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment - Q-Skip</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+
+<body class="p-pay">
+
+  <div class="card">
+    <h2>Checkout & Payment</h2>
+    <p class="subtitle">Select your payment method before placing order</p>
+
+    <div class="order-total">
+      <span>Total Amount:</span>
+      <span id="order-total">₹0</span>
+    </div>
+
+    <!-- Payment Options Selection -->
+    <div class="payment-options">
+      <label class="option-card">
+        <input 
+          type="radio" 
+          name="paymentMethod" 
+          value="Campus Smart Card" 
+          checked 
+          onchange="updateButtonText()"
+        >
+        <div class="option-details">
+          <span class="option-title">💳 Campus Smart Card (Pass)</span>
+          <span class="option-sub">Deduct from prepaid balance</span>
+        </div>
+      </label>
+
+      <label class="option-card">
+        <input 
+          type="radio" 
+          name="paymentMethod" 
+          value="Online Payment (UPI/GPay)" 
+          onchange="updateButtonText()"
+        >
+        <div class="option-details">
+          <span class="option-title">📱 Online Payment (GPay / UPI)</span>
+          <span class="option-sub">Pay instantly via UPI or Net Banking</span>
+        </div>
+      </label>
+
+      <label class="option-card">
+        <input 
+          type="radio" 
+          name="paymentMethod" 
+          value="Cash at Counter" 
+          onchange="updateButtonText()"
+        >
+        <div class="option-details">
+          <span class="option-title">💵 Cash at Counter</span>
+          <span class="option-sub">Pay cash when collecting food</span>
+        </div>
+      </label>
+    </div>
+
+    <button
+      class="btn-pay"
+      id="pay-button"
+      onclick="processPayment()"
+    >
+      Pay via Campus Smart Card
+    </button>
+
+    <a href="/cart.html" class="back-link">
+      ← Back to Cart
+    </a>
+  </div>
+
+  <script>
+    const payButton = document.getElementById('pay-button');
+
+    function getStoredData(key, fallback) {
+      try {
+        const value = localStorage.getItem(key);
+        return value ? JSON.parse(value) : fallback;
+      } catch (error) {
+        console.error('Invalid local storage data:', key, error);
+        return fallback;
+      }
+    }
+
+    function updateButtonText() {
+      const selectedMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+      if (payButton.disabled && payButton.textContent === 'Cart is Empty') return;
+
+      if (selectedMethod === 'Campus Smart Card') {
+        payButton.textContent = 'Pay via Campus Smart Card';
+      } else if (selectedMethod === 'Online Payment (UPI/GPay)') {
+        payButton.textContent = 'Proceed with Online Payment';
+      } else if (selectedMethod === 'Cash at Counter') {
+        payButton.textContent = 'Confirm Order (Pay Cash at Counter)';
+      }
+    }
+
+    function showTotal() {
+      const cart = getStoredData('qskip_cart', {});
+      const activeOrder = getStoredData('qskip_active_order', {});
+
+      const subtotal = Object.values(cart).reduce(
+        (sum, item) => sum + (Number(item.price) * Number(item.qty)),
+        0
+      );
+
+      const total = subtotal > 0
+        ? Number(activeOrder.totalBill) || subtotal + 5
+        : 0;
+
+      document.getElementById('order-total').textContent = `₹${total}`;
+
+      if (subtotal <= 0) {
+        payButton.disabled = true;
+        payButton.textContent = 'Cart is Empty';
+      }
+
+      return total;
+    }
+
+    async function processPayment() {
+      const cart = getStoredData('qskip_cart', {});
+      const activeOrder = getStoredData('qskip_active_order', {});
+      const loggedInUser = getStoredData('qskip_user', null);
+      const itemKeys = Object.keys(cart);
+
+      // Check if user is logged in
+      if (!loggedInUser || !loggedInUser.name) {
+        alert('You must be logged in to place an order.');
+        window.location.href = '/login.html';
+        return;
+      }
+
+      if (itemKeys.length === 0) {
+        alert('Your cart is empty. Please add items first.');
+        window.location.href = '/menu.html';
+        return;
+      }
+
+      if (payButton.disabled) return;
+
+      // Read selected payment method
+      const selectedPaymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+
+      // Prevent duplicate submissions while processing
+      payButton.disabled = true;
+      payButton.textContent = 'Processing Order...';
+
+      const orderItems = itemKeys.map(key => ({
+        id: cart[key].id || key,
+        name: cart[key].name,
+        qty: Number(cart[key].qty),
+        price: Number(cart[key].price)
+      }));
+
+      // Dynamic Payload reading currently logged-in student details
+      const payload = {
+        customerName: loggedInUser.name,
+        regNo: loggedInUser.regNo,
+        items: orderItems,
+        totalPrice: showTotal(),
+        slotTime: activeOrder.slot || '12:30 PM - 01:00 PM',
+        paymentMethod: selectedPaymentMethod
+      };
+
+      try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (loggedInUser.token) {
+          headers['Authorization'] = 'Bearer ' + loggedInUser.token;
+        }
+
+        const response = await fetch('/api/orders', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(payload)
+        });
+
+        const responseText = await response.text();
+        let result;
+
+        try {
+          result = JSON.parse(responseText);
+        } catch {
+          throw new Error(
+            `Server returned an invalid response (HTTP ${response.status}).`
+          );
+        }
+
+        if (!response.ok || !result.success) {
+          throw new Error(
+            result.message || `Request failed (HTTP ${response.status})`
+          );
+        }
+
+        // Save active order details for tracking page
+        localStorage.setItem('qskip_active_order_id', result.orderId);
+
+        localStorage.setItem(
+          'qskip_active_order',
+          JSON.stringify({
+            ...activeOrder,
+            customerName: loggedInUser.name,
+            regNo: loggedInUser.regNo,
+            totalBill: result.totalPrice ?? payload.totalPrice,
+            slot: payload.slotTime,
+            paymentMethod: selectedPaymentMethod
+          })
+        );
+
+        // Clear cart on success
+        localStorage.removeItem('qskip_cart');
+
+        alert(
+          `Order placed successfully!\nOrder ID: ${result.orderId}\nCustomer: ${loggedInUser.name}\nTotal: ₹${result.totalPrice ?? payload.totalPrice}`
+        );
+
+        window.location.href = `/tracking.html?orderId=${result.orderId}`;
+
+      } catch (error) {
+        console.error('Order submission failed:', error);
+
+        alert(
+          'Unable to place your order.\n\n' +
+          error.message +
+          '\n\nPlease verify that your backend server is active.'
+        );
+
+        payButton.disabled = false;
+        updateButtonText();
+      }
+    }
+
+    showTotal();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Order Tracking - Q-Skip</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .queue-info-box {
+      margin: 10px 0;
+      padding: 10px;
+      background: #f0f4f8;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: 600;
+      color: #1e3a5f;
+    }
+  </style>
+</head>
+<body class="p-track">
+
+  <div class="tracking-card">
+    <div class="header-badge" id="live-badge">⚡ Live Kitchen Status</div>
+    <h2>Order Tracking</h2>
+    <div class="order-id" id="display-order-id">Order ID: #QS----</div>
+
+    <!-- Live Orders Ahead Banner -->
+    <div class="queue-info-box" id="queue-ahead-box">
+      👥 Orders Ahead in Queue: <span id="orders-ahead-count">Calculating...</span>
+    </div>
+
+    <!-- Smart Estimated Wait Time Banner -->
+    <div class="wait-time-box">
+      <div class="wait-time-label">Estimated Preparation Time</div>
+      <div class="timer" id="countdown-timer">Calculating ETA...</div>
+      <div class="wait-note" id="slot-note">Pickup Slot: --</div>
+    </div>
+
+    <!-- Dynamic Status Stepper -->
+    <div class="status-timeline">
+      
+      <!-- Stage 1 -->
+      <div class="status-step active" id="step-1">
+        <div class="icon-container">✓</div>
+        <div class="step-content">
+          <span class="step-title">Order Received</span>
+          <span class="step-desc">Received by canteen payment system</span>
+        </div>
+      </div>
+
+      <!-- Stage 2 -->
+      <div class="status-step" id="step-2">
+        <div class="icon-container">🍳</div>
+        <div class="step-content">
+          <span class="step-title">Preparing in Kitchen</span>
+          <span class="step-desc">Chefs are preparing your meal</span>
+        </div>
+      </div>
+
+      <!-- Stage 3 -->
+      <div class="status-step" id="step-3">
+        <div class="icon-container">🛍️</div>
+        <div class="step-content">
+          <span class="step-title">Ready for Takeaway</span>
+          <span class="step-desc">Collect at counter with Order ID</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Order Metadata Summary -->
+    <div class="order-details">
+      <div class="detail-row">
+        <span>Customer:</span>
+        <strong id="display-name">Loading...</strong>
+      </div>
+      <div class="detail-row">
+        <span>Payment Method:</span>
+        <strong id="display-payment">--</strong>
+      </div>
+      <div class="detail-row">
+        <span>Total Paid:</span>
+        <strong id="display-amount">₹0</strong>
+      </div>
+    </div>
+
+    <a href="/menu.html" class="btn-home">Order More Items</a>
+  </div>
+
+  <script>
+    function getStoredData(key, fallback) {
+      try {
+        const val = localStorage.getItem(key);
+        return val ? JSON.parse(val) : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    // Helper: Shorten big order IDs
+    function formatShortOrderId(rawId) {
+      if (!rawId) return '#QS-1028';
+      const parts = rawId.split('-');
+      if (parts.length > 1) {
+        const lastPart = parts[parts.length - 1];
+        return `#QS-${lastPart.padStart(4, '0')}`;
+      }
+      return `#${rawId}`;
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const activeOrderId = urlParams.get('orderId') || localStorage.getItem('qskip_active_order_id');
+    const activeOrder = getStoredData('qskip_active_order', {});
+    const loggedInUser = getStoredData('qskip_user', null);
+
+    document.getElementById('display-order-id').textContent = `Order ID: ${formatShortOrderId(activeOrderId)}`;
+    
+    if (loggedInUser && loggedInUser.name) {
+      document.getElementById('display-name').textContent = `${loggedInUser.name} (${loggedInUser.regNo || ''})`;
+    } else if (activeOrder.customerName) {
+      document.getElementById('display-name').textContent = `${activeOrder.customerName} (${activeOrder.regNo || ''})`;
+    } else {
+      document.getElementById('display-name').textContent = 'Guest Student';
+    }
+
+    document.getElementById('display-payment').textContent = activeOrder.paymentMethod || 'Campus Smart Card';
+    document.getElementById('display-amount').textContent = `₹${activeOrder.totalBill || 0}`;
+
+    let targetEndTime = null;
+    let timerInterval = null;
+    let isFinishedRedirecting = false;
+
+    function startCountdown(minutes) {
+      if (!targetEndTime) {
+        targetEndTime = Date.now() + minutes * 60 * 1000;
+      }
+
+      if (timerInterval) clearInterval(timerInterval);
+
+      timerInterval = setInterval(() => {
+        const remainingMs = targetEndTime - Date.now();
+
+        if (remainingMs <= 0) {
+          clearInterval(timerInterval);
+          document.getElementById('countdown-timer').textContent = "READY FOR PICKUP!";
+          return;
+        }
+
+        const totalSec = Math.floor(remainingMs / 1000);
+        const mins = Math.floor(totalSec / 60);
+        const secs = totalSec % 60;
+        document.getElementById('countdown-timer').textContent = 
+          `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')} mins`;
+      }, 1000);
+    }
+
+    // Live Server Status Polling & Order Completion Handler
+    async function checkLiveOrderStatus() {
+      if (!activeOrderId || isFinishedRedirecting) return;
+
+      try {
+        const response = await fetch(`/api/orders/${activeOrderId}`);
+        const data = await response.json();
+
+        if (data.success && data.order) {
+          const order = data.order;
+          const status = order.queueStatus;
+
+          if (order.customerName) {
+            document.getElementById('display-name').textContent = `${order.customerName} (${order.regNo || ''})`;
+          }
+
+          const pos = data.queuePosition || 1;
+          const ordersAhead = Math.max(0, pos - 1);
+          document.getElementById('orders-ahead-count').textContent = 
+            ordersAhead === 0 ? "You're next in line!" : `${ordersAhead} ${ordersAhead === 1 ? 'order' : 'orders'} ahead of you`;
+
+          document.getElementById('slot-note').textContent = `Slot: ${order.slotTime || 'Immediate'}`;
+          document.getElementById('display-amount').textContent = `₹${order.totalPrice}`;
+
+          if (status === 'Received') {
+            document.getElementById('step-1').className = "status-step active";
+            document.getElementById('step-2').className = "status-step";
+            document.getElementById('step-3').className = "status-step";
+            document.getElementById('live-badge').textContent = "⚡ Order Placed";
+            startCountdown(data.estimatedWaitMinutes || 5);
+          } else if (status === 'Preparing') {
+            document.getElementById('step-1').className = "status-step completed";
+            document.getElementById('step-2').className = "status-step active";
+            document.getElementById('step-3').className = "status-step";
+            document.getElementById('live-badge').textContent = "🍳 In Kitchen";
+            startCountdown(data.estimatedWaitMinutes || 3);
+          } else if (status === 'Ready') {
+            if (timerInterval) clearInterval(timerInterval);
+            document.getElementById('step-1').className = "status-step completed";
+            document.getElementById('step-2').className = "status-step completed";
+            document.getElementById('step-3').className = "status-step active";
+            document.getElementById('live-badge').textContent = "✅ Ready for Collection";
+            document.getElementById('live-badge').style.background = "#c8e6c9";
+            document.getElementById('live-badge').style.color = "#2e7d32";
+            document.getElementById('countdown-timer').textContent = "READY FOR PICKUP!";
+            document.getElementById('orders-ahead-count').textContent = "Order complete!";
+          } else if (status === 'Collected' || status === 'Cancelled') {
+            // ORDER COMPLETED / FINISHED HANDLING
+            isFinishedRedirecting = true;
+            if (timerInterval) clearInterval(timerInterval);
+
+            localStorage.removeItem('qskip_active_order_id');
+            localStorage.removeItem('qskip_active_order');
+
+            document.getElementById('countdown-timer').textContent = status === 'Collected' ? "ORDER COLLECTED!" : "ORDER CANCELLED";
+            document.getElementById('orders-ahead-count').textContent = "Completed";
+
+            setTimeout(() => {
+              alert(`Order ${status.toLowerCase()}! Redirecting to menu for new orders.`);
+              window.location.href = '/menu.html';
+            }, 1500);
+          }
+        }
+      } catch (err) {
+        console.error('Status sync error:', err);
+      }
+    }
+
+    setInterval(checkLiveOrderStatus, 3000);
+    checkLiveOrderStatus();
+  </script>
+
+</body>
+</html>
